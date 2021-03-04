@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WhatsApp</title>
+    <link rel="icon" href="http://pngimg.com/uploads/whatsapp/whatsapp_PNG1.png">
+
+    <style>
+      body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+      header{ background-color: #075e54; height: 10vh; display: flex; align-items: center; padding:1rem;}
+      h3{ margin: 0; padding:1rem; color:white;}
+      #form { background: #075e54; padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex;  box-sizing: border-box; align-items: center; }
+      #input { border: none; padding: 0.4rem; flex-grow: 1; border-radius: 0.3rem; }
+      #input:focus { outline: none; }
+      #nick{  border-radius: 0.3rem; padding: 0.3rem;}
+      #form > button { background: rgb(0, 0, 0); border: none; padding: 0.45rem; margin: 0.25rem; border-radius: 0.3rem; outline: none; color: #fff; }
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages > li { padding: 0.5rem 1rem; }
+      #messages > li:nth-child(odd) { background: #dcf8c6; }
+      #messages > li:nth-child(even) { background: #d1ffae; }
+      #color { padding-top:0.5rem; padding-bottom: 0.5rem; background-color: #064f47; border-color: black;}
+    </style>
+
+  </head>
+  <body>
+    <header>
+      <img src="https://lh3.ggpht.com/mp86vbELnqLi2FzvhiKdPX31_oiTRLNyeK8x4IIrbF5eD1D5RdnVwjQP0hwMNR_JdA=s180-rw" width="25rem" height="25rem">
+      <h3>Whatsapp</h3>
+    </header>
+    <ul id="messages"></ul>
+    <form id="form" action="">
+      <input id="nick" autocomplete="off" placeholder="User..."/><button onclick="GuardarNick()" id="guardar">Save</button>
+      <input id="input" autocomplete="off" placeholder="Message..." /><button id="Enviar" >Send</button><button id="negro" onclick="textoNegrita()">Bold</button><input id="color" type="color" />
+    </form>
+  </body>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+
+  <script>
+    var socket = io();
+  
+    var messages = document.getElementById('messages');
+    var form = document.getElementById('form');
+    var nick = document.getElementById('nick');
+    var input = document.getElementById('input');
+    var color = document.getElementById('color');
+    var guardar = document.getElementById('guardar');
+    var negro = document.getElementById('negro');
+    var enviar = document.getElementById('Enviar');
+    var negrita = false;
+
+    input.style.visibility="hidden";
+    color.style.visibility="hidden";
+    negro.style.visibility="hidden";
+    enviar.style.visibility="hidden";
+    
+    function textoNegrita(){
+        if(negrita==false){
+            negrita=true;
+        }else{
+            negrita=false;
+        }
+    }
+
+    function GuardarNick(){
+      if(nick.value){
+        guardar.style.visibility ="hidden";
+        input.style.visibility="visible";
+        color.style.visibility="visible";
+        negro.style.visibility="visible";
+        enviar.style.visibility="visible";
+        nick.style.display="none";
+        guardar.style.display="none";
+        nick.disabled= true;
+      }
+    }
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      if(nick.value){
+        if (input.value) {
+            var mensaje =  {
+                user: nick.value,
+                msg :input.value,
+                bold: negrita,
+                color: color.value
+            };
+            socket.emit('chat message', mensaje);
+            input.value = ''; 
+        }
+      }
+    });
+
+    socket.on('chat message', function(msg) {
+        var item = document.createElement('li');
+        if(msg.bold==true){
+            item.textContent = msg.user +': '+msg.msg;
+            item.style.fontWeight ="bold";
+            item.style.color=msg.color;
+            messages.appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
+        }else{
+            item.textContent = msg.user +': '+msg.msg;
+            item.style.color = msg.color;
+            messages.appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
+        }          
+    });
+
+  </script>
+</html>
